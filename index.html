@@ -3,118 +3,347 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0b1e">
   <title>アラーム</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f7f7f5;
-      --fg: #1c1c1c;
-      --muted: #8a8a8a;
-      --accent: #e5533d;
-      --card: #ffffff;
-      --line: #e3e3e0;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #141414;
-        --fg: #f2f2f2;
-        --muted: #8a8a8a;
-        --accent: #ff6a52;
-        --card: #1e1e1e;
-        --line: #2e2e2e;
-      }
+      --bg-1: #0b0b1e;
+      --bg-2: #1a1240;
+      --text: #f4f2ff;
+      --muted: rgba(244, 242, 255, 0.55);
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-line: rgba(255, 255, 255, 0.12);
+      --grad-a: #ff8a5c;
+      --grad-b: #ff4f8b;
+      --grad-c: #8b5cff;
     }
     * { box-sizing: border-box; margin: 0; }
+    html, body { height: 100%; }
     body {
       min-height: 100vh;
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       place-items: center;
-      padding: 16px;
-      background: var(--bg);
-      color: var(--fg);
-      font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      padding: 24px 16px;
+      overflow-x: hidden;
+      color: var(--text);
+      background: radial-gradient(120% 90% at 50% 0%, var(--bg-2), var(--bg-1) 70%);
+      font-family: "Zen Kaku Gothic New", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
-    main { width: 100%; max-width: 360px; text-align: center; }
-    #clock {
-      font-size: clamp(56px, 18vw, 88px);
-      font-weight: 200;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 0.02em;
+
+    /* Soft glowing blobs drifting in the background */
+    .blob {
+      position: fixed;
+      width: 46vmax;
+      height: 46vmax;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+      animation: drift 22s ease-in-out infinite alternate;
     }
-    #date { color: var(--muted); margin-top: 4px; }
-    .card {
-      margin-top: 40px;
-      padding: 24px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
+    .blob.one { background: var(--grad-c); top: -18vmax; left: -14vmax; }
+    .blob.two { background: var(--grad-b); bottom: -22vmax; right: -16vmax; animation-delay: -8s; }
+    .blob.three { background: var(--grad-a); bottom: -10vmax; left: -20vmax; opacity: 0.18; animation-delay: -15s; }
+    @keyframes drift {
+      to { transform: translate(6vmax, 4vmax) scale(1.12); }
     }
-    input[type="time"] {
+
+    #stars { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle 3s ease-in-out infinite;
+    }
+    @keyframes twinkle { 50% { opacity: 0.15; } }
+
+    main {
+      position: relative;
+      z-index: 1;
       width: 100%;
-      font: inherit;
-      font-size: 32px;
+      max-width: 400px;
       text-align: center;
-      padding: 8px;
-      color: var(--fg);
+    }
+
+    #greeting {
+      font-size: 14px;
+      letter-spacing: 0.3em;
+      color: var(--muted);
+    }
+    #clock {
+      margin-top: 8px;
+      font-family: "Outfit", sans-serif;
+      font-weight: 200;
+      font-size: clamp(48px, 20vw, 104px);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      background: linear-gradient(180deg, #ffffff 30%, rgba(255, 255, 255, 0.55));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 40px rgba(139, 92, 255, 0.25);
+    }
+    #seconds {
+      font-size: 0.38em;
+      font-weight: 300;
+      margin-left: 4px;
+      opacity: 0.6;
+    }
+    #date { margin-top: 10px; color: var(--muted); font-size: 15px; }
+
+    .card {
+      margin-top: 36px;
+      padding: 28px 24px 24px;
+      background: var(--glass);
+      border: 1px solid var(--glass-line);
+      border-radius: 28px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+    }
+    .label svg { width: 16px; height: 16px; }
+
+    input[type="time"] {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 4px 0;
+      font-family: "Outfit", sans-serif;
+      font-weight: 300;
+      font-size: clamp(40px, 14vw, 56px);
+      text-align: center;
+      color: var(--text);
       background: transparent;
       border: none;
-      border-bottom: 1px solid var(--line);
       outline: none;
-      color-scheme: light dark;
+      color-scheme: dark;
     }
-    button {
+    input[type="time"]::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; }
+    input[type="time"]:disabled { opacity: 1; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .chip {
+      padding: 8px 14px;
+      font: inherit;
+      font-size: 13px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-line);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .chip:hover { background: rgba(255, 255, 255, 0.14); transform: translateY(-1px); }
+    body.armed .chips { opacity: 0.3; pointer-events: none; }
+
+    #toggle {
       width: 100%;
-      margin-top: 20px;
-      padding: 14px;
+      margin-top: 22px;
+      padding: 16px;
       font: inherit;
       font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #fff;
       border: none;
-      border-radius: 12px;
+      border-radius: 18px;
       cursor: pointer;
-      color: var(--bg);
-      background: var(--fg);
+      background: linear-gradient(120deg, var(--grad-a), var(--grad-b) 50%, var(--grad-c));
+      background-size: 200% 100%;
+      box-shadow: 0 12px 30px -8px rgba(255, 79, 139, 0.6);
+      transition: transform 0.2s, box-shadow 0.2s, background-position 0.6s;
     }
-    body.armed #toggle { background: transparent; color: var(--fg); border: 1px solid var(--line); }
-    #status { margin-top: 16px; min-height: 1.4em; color: var(--muted); font-size: 14px; }
-    body.armed #status { color: var(--accent); }
+    #toggle:hover { transform: translateY(-2px); background-position: 100% 0; box-shadow: 0 16px 36px -8px rgba(139, 92, 255, 0.7); }
+    #toggle:active { transform: translateY(0); }
+    body.armed #toggle {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-line);
+      box-shadow: none;
+      font-weight: 500;
+    }
 
+    #status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      min-height: 1.5em;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    body.armed #status { color: var(--text); }
+    .dot {
+      display: none;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #5cffb0;
+      box-shadow: 0 0 12px #5cffb0;
+      animation: breathe 2s ease-in-out infinite;
+    }
+    body.armed .dot { display: inline-block; }
+    @keyframes breathe { 50% { opacity: 0.35; } }
+
+    /* Ringing screen */
     #ringing {
       position: fixed;
       inset: 0;
+      z-index: 10;
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 24px;
+      gap: 12px;
       padding: 16px;
-      background: var(--accent);
-      color: #fff;
-      animation: pulse 1s ease-in-out infinite;
+      background: radial-gradient(circle at 50% 40%, #ff6a7d, #c2366b 45%, #3b1460);
     }
     body.ringing #ringing { display: flex; }
-    #ringing p { font-size: 28px; }
-    #ringing button { max-width: 280px; background: #fff; color: var(--accent); font-weight: 600; }
-    @keyframes pulse { 50% { opacity: 0.85; } }
+    .bell-wrap {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 180px;
+      height: 180px;
+      margin-bottom: 12px;
+    }
+    .ring-wave {
+      position: absolute;
+      inset: 0;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      animation: wave 2.4s ease-out infinite;
+    }
+    .ring-wave:nth-child(2) { animation-delay: 0.8s; }
+    .ring-wave:nth-child(3) { animation-delay: 1.6s; }
+    @keyframes wave {
+      from { transform: scale(0.5); opacity: 1; }
+      to { transform: scale(1.6); opacity: 0; }
+    }
+    .bell {
+      display: grid;
+      place-items: center;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(10px);
+      animation: shake 0.6s ease-in-out infinite;
+    }
+    .bell svg { width: 48px; height: 48px; }
+    @keyframes shake {
+      0%, 100% { transform: rotate(0); }
+      20% { transform: rotate(-14deg); }
+      40% { transform: rotate(12deg); }
+      60% { transform: rotate(-8deg); }
+      80% { transform: rotate(6deg); }
+    }
+    #ringTime {
+      font-family: "Outfit", sans-serif;
+      font-weight: 200;
+      font-size: clamp(72px, 24vw, 120px);
+      line-height: 1;
+    }
+    .ring-text { font-size: 16px; letter-spacing: 0.2em; opacity: 0.85; }
+    .ring-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 300px;
+      margin-top: 32px;
+    }
+    .ring-actions button {
+      padding: 16px;
+      font: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .ring-actions button:hover { transform: translateY(-2px); }
+    #stop { color: #c2366b; background: #fff; border: none; box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.4); }
+    #snooze { color: #fff; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.4); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
+  <div class="blob one"></div>
+  <div class="blob two"></div>
+  <div class="blob three"></div>
+  <div id="stars"></div>
+
   <main>
-    <div id="clock">--:--:--</div>
+    <div id="greeting"></div>
+    <div id="clock"><span id="hm">--:--</span><span id="seconds">--</span></div>
     <div id="date"></div>
+
     <div class="card">
+      <div class="label">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></svg>
+        ALARM
+      </div>
       <input id="time" type="time" value="07:00" aria-label="アラーム時刻">
+      <div class="chips">
+        <button class="chip" data-min="5">+5分</button>
+        <button class="chip" data-min="15">+15分</button>
+        <button class="chip" data-min="30">+30分</button>
+        <button class="chip" data-min="60">+1時間</button>
+      </div>
       <button id="toggle">セット</button>
-      <div id="status"></div>
+      <div id="status"><span class="dot"></span><span id="statusText">時刻を選んでセットしてください</span></div>
     </div>
   </main>
 
   <div id="ringing">
-    <p>⏰ <span id="ringTime"></span></p>
-    <button id="stop">止める</button>
+    <div class="bell-wrap">
+      <div class="ring-wave"></div>
+      <div class="ring-wave"></div>
+      <div class="ring-wave"></div>
+      <div class="bell">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      </div>
+    </div>
+    <div id="ringTime"></div>
+    <div class="ring-text">時間になりました</div>
+    <div class="ring-actions">
+      <button id="stop">止める</button>
+      <button id="snooze">5分後にもう一度</button>
+    </div>
   </div>
 
   <script>
     const $ = (id) => document.getElementById(id);
     const pad = (n) => String(n).padStart(2, "0");
+    const toHM = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
     let alarm = null;      // "HH:MM" or null
     let lastFired = null;  // prevents firing twice in the same minute
@@ -123,12 +352,43 @@
 
     try { alarm = localStorage.getItem("alarm"); } catch (e) {}
 
+    // Scatter a few twinkling stars
+    for (let i = 0; i < 40; i++) {
+      const s = document.createElement("div");
+      s.className = "star";
+      s.style.left = Math.random() * 100 + "%";
+      s.style.top = Math.random() * 100 + "%";
+      s.style.opacity = 0.2 + Math.random() * 0.6;
+      s.style.animationDelay = -Math.random() * 3 + "s";
+      $("stars").appendChild(s);
+    }
+
+    function greeting(h) {
+      if (h < 5) return "GOOD NIGHT";
+      if (h < 11) return "GOOD MORNING";
+      if (h < 17) return "GOOD AFTERNOON";
+      return "GOOD EVENING";
+    }
+
+    function untilText(now) {
+      const [h, m] = alarm.split(":").map(Number);
+      const target = new Date(now);
+      target.setHours(h, m, 0, 0);
+      if (target <= now) target.setDate(target.getDate() + 1);
+      const mins = Math.ceil((target - now) / 60000);
+      const hh = Math.floor(mins / 60);
+      const mm = mins % 60;
+      return hh ? `あと ${hh}時間${mm}分` : `あと ${mm}分`;
+    }
+
     function render() {
       document.body.classList.toggle("armed", !!alarm);
-      $("toggle").textContent = alarm ? "解除" : "セット";
+      $("toggle").textContent = alarm ? "解除する" : "セット";
       $("time").disabled = !!alarm;
       if (alarm) $("time").value = alarm;
-      $("status").textContent = alarm ? `${alarm} に鳴ります` : "";
+      $("statusText").textContent = alarm
+        ? `${alarm} に鳴ります（${untilText(new Date())}）`
+        : "時刻を選んでセットしてください";
     }
 
     function save() {
@@ -138,45 +398,79 @@
       } catch (e) {}
     }
 
-    // Short beeps via Web Audio, so no sound file is needed
-    function beep() {
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.3, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.4);
-      osc.connect(gain).connect(audio.destination);
-      osc.start();
-      osc.stop(audio.currentTime + 0.4);
+    function unlockAudio() {
+      // Browsers only allow sound after a user gesture, so unlock audio on click
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      audio.resume();
+    }
+
+    // Two-tone chime via Web Audio, so no sound file is needed
+    function chime() {
+      [880, 1175].forEach((freq, i) => {
+        const t = audio.currentTime + i * 0.18;
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+        osc.connect(gain).connect(audio.destination);
+        osc.start(t);
+        osc.stop(t + 0.5);
+      });
     }
 
     function ring() {
       $("ringTime").textContent = alarm;
       document.body.classList.add("ringing");
-      if (audio) { beep(); beepTimer = setInterval(beep, 600); }
+      if (audio) { chime(); beepTimer = setInterval(chime, 900); }
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification("アラーム", { body: `${alarm} になりました` });
       }
     }
 
-    function stop() {
+    function silence() {
       clearInterval(beepTimer);
       document.body.classList.remove("ringing");
+    }
+
+    function stop() {
+      silence();
       alarm = null;
+      save();
+      render();
+    }
+
+    function snooze() {
+      silence();
+      alarm = toHM(new Date(Date.now() + 5 * 60000));
       save();
       render();
     }
 
     function tick() {
       const now = new Date();
-      const hm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-      $("clock").textContent = `${hm}:${pad(now.getSeconds())}`;
-      $("date").textContent = now.toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "short" });
-      if (alarm && alarm === hm && lastFired !== hm && !document.body.classList.contains("ringing")) {
-        lastFired = hm;
-        ring();
+      const hm = toHM(now);
+      $("hm").textContent = hm;
+      $("seconds").textContent = pad(now.getSeconds());
+      $("greeting").textContent = greeting(now.getHours());
+      $("date").textContent = now.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+      if (alarm && !document.body.classList.contains("ringing")) {
+        if (alarm === hm && lastFired !== hm) {
+          lastFired = hm;
+          ring();
+        } else {
+          render();
+        }
       }
     }
+
+    document.querySelectorAll(".chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        $("time").value = toHM(new Date(Date.now() + chip.dataset.min * 60000));
+      });
+    });
 
     $("toggle").addEventListener("click", () => {
       if (alarm) {
@@ -184,9 +478,7 @@
       } else {
         if (!$("time").value) return;
         alarm = $("time").value;
-        // Browsers only allow sound after a user gesture, so unlock audio here
-        audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-        audio.resume();
+        unlockAudio();
         if ("Notification" in window && Notification.permission === "default") {
           Notification.requestPermission();
         }
@@ -195,6 +487,7 @@
       render();
     });
     $("stop").addEventListener("click", stop);
+    $("snooze").addEventListener("click", snooze);
 
     render();
     tick();
